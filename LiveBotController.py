@@ -9,7 +9,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
     'id': 'livebot_controller',
-    'version': '0.1.2',
+    'version': '0.1.3',
     'name': 'LiveBotController',
     'description': "A MCDR plugin for controlling livebot",
     'author': ['Youmiel'],
@@ -124,6 +124,7 @@ class LiveBotController:
         if self.online and self.running:
             self.occupied_players.push(player)
             plugin_fields.server.rcon_query('botfollow %s'%player)
+            plugin_fields.server.broadcast('玩家 %s 临时获得了直播视角的控制权'%player)
 
     def copy(self):
         bot = LiveBotController()
@@ -251,7 +252,7 @@ def on_load(server: ServerInterface, old_module):
     server.register_command(build_command())
     if server.is_server_startup():
         plugin_fields.bot.start()
-    # server.register_command(Literal('!!test').runs(dump))
+    server.register_command(Literal('!!test').runs(dump))
 
 def on_unload(server:ServerInterface):
     global plugin_fields
