@@ -9,7 +9,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
     'id': 'livebot_controller',
-    'version': '0.1.1',
+    'version': '0.1.2',
     'name': 'LiveBotController',
     'description': "A MCDR plugin for controlling livebot",
     'author': ['Youmiel'],
@@ -125,6 +125,14 @@ class LiveBotController:
             self.occupied_players.push(player)
             plugin_fields.server.rcon_query('botfollow %s'%player)
 
+    def copy(self):
+        bot = LiveBotController()
+        bot.mode = self.mode
+        bot.occupied_players = self.occupied_players
+        bot.online = self.online
+        bot.running = self.running
+        bot.time_since_last_tp = self.time_since_last_tp
+        return bot
 # -------------------------------------------
 class Fields:
     def __init__(self) -> None:
@@ -235,12 +243,14 @@ def on_load(server: ServerInterface, old_module):
     global plugin_fields
     if old_module is not None:
         plugin_fields = old_module.plugin_fields
-        plugin_fields.bot.start()
+        plugin_fields.bot = old_module.plugin_fields.bot.copy() 
     plugin_fields.server = server
     load_config(server)
     load_landscape(server)
     check_rcon()
     server.register_command(build_command())
+    if server.is_server_startup():
+        plugin_fields.bot.start()
     # server.register_command(Literal('!!test').runs(dump))
 
 def on_unload(server:ServerInterface):
