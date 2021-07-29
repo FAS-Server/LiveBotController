@@ -3,13 +3,14 @@ import os
 import random
 import re
 import time
+from typing import Pattern
 
 import yaml
 from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
     'id': 'livebot_controller',
-    'version': '0.1.3',
+    'version': '0.2.0',
     'name': 'LiveBotController',
     'description': "A MCDR plugin for controlling livebot",
     'author': ['Youmiel'],
@@ -30,7 +31,9 @@ LIVEBOT_CONFIG = os.path.join('server', 'LiveBotFabric', 'config.json')
 LANDSCAPE_PATH = os.path.join('config', 'LiveBotLandscape.txt')
 
 default_config = {
-    'randomTpDelay': 30 # 
+    'randomTpDelay': 30,
+    'excludedPrefix': '',
+    'excludedSuffix': '',
     }
 config = default_config.copy()
 # -------------------------------------------
@@ -118,7 +121,13 @@ class LiveBotController:
                 index = random.randint(0, plugin_fields.landscape_num-1)
                 plugin_fields.server.rcon_query(plugin_fields.landscapes[index])
         elif self.online:
-            plugin_fields.server.rcon_query("botfollow @r")
+            pattern = plugin_fields.player_pattern
+            while(plugin_fields.player_num > 1):
+                index = random.randint(0, plugin_fields.player_num - 1)
+                player = plugin_fields.player_list[index]
+                if re.fullmatch(pattern, player) is None: 
+                    break
+            plugin_fields.server.rcon_query("botfollow %s"%player)
 
     def add_occupation(self,player:str):
         if self.online and self.running:
@@ -143,6 +152,7 @@ class Fields:
         self.player_list = []
         self.landscape_num = 0
         self.landscapes = []
+        self.player_pattern = None
 
 plugin_fields = Fields()
 
@@ -241,7 +251,7 @@ def dump(cmd_src:CommandSource):
 # -------------------------------------------
 
 def on_load(server: ServerInterface, old_module):
-    global plugin_fields
+    global plugin_fields, config
     if old_module is not None:
         plugin_fields = old_module.plugin_fields
         plugin_fields.bot = old_module.plugin_fields.bot.copy() 
@@ -249,6 +259,11 @@ def on_load(server: ServerInterface, old_module):
     load_config(server)
     load_landscape(server)
     check_rcon()
+    plugin_fields.player_pattern = re.compile(
+                                        r'(' + config['excludedPrefix'] + r')'+
+                                        r'\w+' +
+                                        r'(' + config['excludedSuffix'] + r')'
+                                    )
     server.register_command(build_command())
     if server.is_server_startup():
         plugin_fields.bot.start()
