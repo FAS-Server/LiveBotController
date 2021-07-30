@@ -116,17 +116,22 @@ class LiveBotController:
         if (time.time() - self.time_since_last_tp) < config['randomTpDelay']:
             return
         self.time_since_last_tp = time.time()
-        if self.online and plugin_fields.player_num == 1:
+        if self.online and plugin_fields.player_num <= 1:
             if plugin_fields.landscape_num > 0:
                 index = random.randint(0, plugin_fields.landscape_num-1)
                 plugin_fields.server.rcon_query(plugin_fields.landscapes[index])
         elif self.online:
+            '''
             pattern = plugin_fields.player_pattern
             while(plugin_fields.player_num > 1):
                 index = random.randint(0, plugin_fields.player_num - 1)
                 player = plugin_fields.player_list[index]
                 if re.fullmatch(pattern, player) is None: 
                     break
+                # old logic
+            '''
+            index = random.randint(0, plugin_fields.player_num - 1)
+            player = plugin_fields.player_list[index]
             plugin_fields.server.rcon_query("botfollow %s"%player)
 
     def add_occupation(self,player:str):
@@ -208,6 +213,13 @@ def update_player_list(server:ServerInterface):
     if match:
         plugin_fields.player_num = int(match.group(1))
         plugin_fields.player_list = re.split(',\s',match.group(3))
+        for player in plugin_fields.player_list:
+            if plugin_fields.player_pattern is None:
+                break
+            if re.fullmatch(plugin_fields.player_pattern, player) is not None:
+                plugin_fields.server.logger.info('remove %s'%player)
+                plugin_fields.player_list.remove(player)
+                plugin_fields.player_num -= 1
 
 @new_thread('UpdatePlayer')
 def update_bot_state(server:ServerInterface):
@@ -239,7 +251,7 @@ def cast(event: str):
     }[event]()
 
 def dump(cmd_src:CommandSource):
-    cmd_src.reply('plugin_fields:' + plugin_fields.player_list.__str__() + '_%d'%plugin_fields.player_num)
+    cmd_src.reply('plugin_fields:' + plugin_fields.player_list.__str__() + '_%d'%plugin_fields.player_num )
     cmd_src.reply('landscape:' + plugin_fields.landscapes.__str__() + '_%d'%plugin_fields.landscape_num)
     cmd_src.reply('bot: mode: ' + plugin_fields.bot.mode.__str__() +
                   ', running: ' + plugin_fields.bot.running.__str__() +
@@ -259,11 +271,14 @@ def on_load(server: ServerInterface, old_module):
     load_config(server)
     load_landscape(server)
     check_rcon()
-    plugin_fields.player_pattern = re.compile(
+    if config['excludedPrefix'] != '' or config['excludedSuffix'] != '':
+        plugin_fields.player_pattern = re.compile(
                                         r'(' + config['excludedPrefix'] + r')'+
                                         r'\w+' +
                                         r'(' + config['excludedSuffix'] + r')'
-                                    )
+                                        )
+    else:
+        plugin_fields.player_pattern = None
     server.register_command(build_command())
     if server.is_server_startup():
         plugin_fields.bot.start()
