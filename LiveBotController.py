@@ -10,7 +10,7 @@ from mcdreforged.api.all import *
 
 PLUGIN_METADATA = {
     'id': 'livebot_controller',
-    'version': '0.2.0',
+    'version': '0.2.1',
     'name': 'LiveBotController',
     'description': "A MCDR plugin for controlling livebot",
     'author': ['Youmiel'],
