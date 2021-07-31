@@ -23,7 +23,7 @@ PLUGIN_METADATA = {
 STATE_PATTERN = re.compile(r'Bot state: (Normal|Offline|Spectating [\w]{3,16})')
     # Botstate: Offline | Normal | Spectating <player>
 LIST_PATTERN = re.compile(r'There are ([0-9]+) of a max of ([0-9]+) players online:\s?(.*)')
-    # group(1): plyer number
+    # group(1): player number
     # group(2): max players
     # group(3): player list
 CONFIG_PATH = os.path.join('config', 'LiveBotController.yml')
@@ -70,7 +70,7 @@ class PlayerStack:
 class LiveBotController:
     class Mode(enum.Enum):
         EMPTY = 'EMPTY'
-        OCCUPIED = 'OCUPIED'
+        OCCUPIED = 'OCCUPIED'
         RANDOM = 'RANDOM'
 
     def __init__(self) -> None:
@@ -205,7 +205,7 @@ def check_rcon():
         cast('no_rcon')
         plugin_fields.server.unload_plugin(PLUGIN_METADATA['id'])
 
-@new_thread('UpatePlayer')
+@new_thread('UpdatePlayer')
 def update_player_list(server:ServerInterface):
     global plugin_fields
     query = server.rcon_query('list')
