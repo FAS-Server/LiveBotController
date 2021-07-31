@@ -3,6 +3,7 @@ import os
 import random
 import re
 import time
+from typing import Optional
 
 import yaml
 from mcdreforged.api.all import *
@@ -53,7 +54,7 @@ class PlayerStack:
         self.players.append(player)
         self.size += 1
 
-    def pop(self) -> str:
+    def pop(self) -> Optional[str]:
         if self.size > 0:
             player = self.players[self.size - 1]
             self.players.remove(player)
