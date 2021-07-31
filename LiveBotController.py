@@ -3,7 +3,6 @@ import os
 import random
 import re
 import time
-from typing import Pattern
 
 import yaml
 from mcdreforged.api.all import *
