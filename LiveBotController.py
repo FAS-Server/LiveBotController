@@ -30,6 +30,8 @@ CONFIG_PATH = os.path.join('config', 'LiveBotController.yml')
 LIVEBOT_CONFIG = os.path.join('server', 'LiveBotFabric', 'config.json')
 LANDSCAPE_PATH = os.path.join('config', 'LiveBotLandscape.txt')
 
+PREFIX = "!!live"
+
 default_config = {
     'randomTpDelay': 30,
     'excludedPrefix': '',
@@ -201,9 +203,12 @@ def load_landscape(server: ServerInterface):
             pass
 
 
-def build_command():
-    node = Literal('!!live').runs(occupy)
-    return node
+def build_command(server: ServerInterface):
+    # register help message
+    server.register_help_message(PREFIX, "Control the livebot")
+    node = Literal(PREFIX).runs(occupy)
+    server.register_command(node)
+    # server.register_command(Literal('!!test').runs(dump))
 
 
 @new_thread('LiveBotController_checkRcon')
@@ -295,10 +300,9 @@ def on_load(server: ServerInterface, old_module):
         )
     else:
         plugin_fields.player_pattern = None
-    server.register_command(build_command())
+    build_command(server)
     if server.is_server_startup():
         plugin_fields.bot.start()
-    server.register_command(Literal('!!test').runs(dump))
 
 
 def on_unload(server: ServerInterface):
