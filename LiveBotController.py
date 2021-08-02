@@ -13,8 +13,8 @@ PLUGIN_METADATA = {
     'version': '0.2.1',
     'name': 'LiveBotController',
     'description': "A MCDR plugin for controlling livebot",
-    'author': ['Youmiel'],
-    'link': '',
+    'author': ['Youmiel','YehowahLiu'],
+    'link': 'https://github.com/FAS-Server/LiveBotController',
     'dependencies': {
         'mcdreforged': '>=1.0.0',
     }
