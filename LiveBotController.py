@@ -43,34 +43,31 @@ config = default_config.copy()
 # -------------------------------------------
 class PlayerStack:
     players: list
-    size: int
 
     def __init__(self) -> None:
         self.players = []
-        self.size = 0
 
     def push(self, player: str):
         if player in self.players:
             self.players.remove(player)
-            self.size -= 1
         self.players.append(player)
-        self.size += 1
 
     def pop(self) -> Optional[str]:
-        if self.size > 0:
-            player = self.players[self.size - 1]
+        if len(self.players) > 0:
+            player = self.players[-1]
             self.players.remove(player)
-            self.size -= 1
             return player
         else:
             return None
 
     def top(self):
-        if self.size > 0:
-            return self.players[self.size - 1]
+        if len(self.players) > 0:
+            return self.players[-1]
         else:
             return None
 
+    def size(self):
+        return len(self.players)
 
 class LiveBotController:
     class Mode(enum.Enum):
@@ -94,9 +91,9 @@ class LiveBotController:
     def tick(self):
         while self.running:
             if self.online:
-                if self.occupied_players.size == 0 and self.mode != LiveBotController.Mode.RANDOM:
+                if self.occupied_players.size() == 0 and self.mode != LiveBotController.Mode.RANDOM:
                     self.mode = LiveBotController.Mode.RANDOM
-                if self.occupied_players.size > 0 and self.mode != LiveBotController.Mode.OCCUPIED:
+                if self.occupied_players.size() > 0 and self.mode != LiveBotController.Mode.OCCUPIED:
                     self.mode = LiveBotController.Mode.OCCUPIED
                 {
                     LiveBotController.Mode.EMPTY: self.do_empty,
@@ -113,7 +110,7 @@ class LiveBotController:
         global plugin_fields
         if self.occupied_players.top() not in plugin_fields.player_list:
             self.occupied_players.pop()
-            if self.occupied_players.size != 0:
+            if self.occupied_players.size() != 0:
                 plugin_fields.server.rcon_query("botfollow %s" % self.occupied_players.top())
 
     def do_random(self):
@@ -121,21 +118,21 @@ class LiveBotController:
         if (time.time() - self.time_since_last_tp) < config['randomTpDelay']:
             return
         self.time_since_last_tp = time.time()
-        if self.online and plugin_fields.player_num <= 1:
-            if plugin_fields.landscape_num > 0:
-                index = random.randint(0, plugin_fields.landscape_num - 1)
+        if self.online and len(plugin_fields.player_list) <= 1:
+            if len(plugin_fields.landscapes) > 0:
+                index = random.randint(0, len(plugin_fields.landscapes) - 1)
                 plugin_fields.server.rcon_query(plugin_fields.landscapes[index])
         elif self.online:
             '''
             pattern = plugin_fields.player_pattern
-            while(plugin_fields.player_num > 1):
-                index = random.randint(0, plugin_fields.player_num - 1)
+            while(len(plugin_fields.player_list) > 1):
+                index = random.randint(0, len(plugin_fields.player_list) - 1)
                 player = plugin_fields.player_list[index]
                 if re.fullmatch(pattern, player) is None: 
                     break
                 # old logic
             '''
-            index = random.randint(0, plugin_fields.player_num - 1)
+            index = random.randint(0, len(plugin_fields.player_list) - 1)
             player = plugin_fields.player_list[index]
             plugin_fields.server.rcon_query("botfollow %s" % player)
 
@@ -160,9 +157,9 @@ class Fields:
     def __init__(self) -> None:
         self.server = None
         self.bot = LiveBotController()
-        self.player_num = 0
+        #self.player_num = 0
         self.player_list = []
-        self.landscape_num = 0
+        #self.landscape_num = 0
         self.landscapes = []
         self.player_pattern = None
 
@@ -192,10 +189,8 @@ def load_landscape(server: ServerInterface):
     try:
         with open(LANDSCAPE_PATH, 'r') as file:
             plugin_fields.landscapes = []
-            plugin_fields.landscape_num = 0
             for line in file:
                 plugin_fields.landscapes.append(str.removesuffix(line, '\n'))
-                plugin_fields.landscape_num += 1
             server.logger.info('Landscape file loaded')
     except FileNotFoundError as e:
         server.logger.warning('fail to read landscape file: %s, creating it automatically.' % e)
@@ -227,7 +222,6 @@ def update_player_list(server: ServerInterface):
     query = server.rcon_query('list')
     match = re.match(LIST_PATTERN, query)
     if match:
-        plugin_fields.player_num = int(match.group(1))
         plugin_fields.player_list = re.split(',\s', match.group(3))
         for player in plugin_fields.player_list:
             if plugin_fields.player_pattern is None:
@@ -235,7 +229,6 @@ def update_player_list(server: ServerInterface):
             if re.fullmatch(plugin_fields.player_pattern, player) is not None:
                 plugin_fields.server.logger.info('remove %s' % player)
                 plugin_fields.player_list.remove(player)
-                plugin_fields.player_num -= 1
 
 
 @new_thread('UpdatePlayer')
@@ -271,13 +264,13 @@ def cast(event: str):
 
 
 def dump(cmd_src: CommandSource):
-    cmd_src.reply('plugin_fields:' + plugin_fields.player_list.__str__() + '_%d' % plugin_fields.player_num)
-    cmd_src.reply('landscape:' + plugin_fields.landscapes.__str__() + '_%d' % plugin_fields.landscape_num)
+    cmd_src.reply('plugin_fields:' + plugin_fields.player_list.__str__() + '_%d' % len(plugin_fields.player_list))
+    cmd_src.reply('landscape:' + plugin_fields.landscapes.__str__() + '_%d' % len(plugin_fields.landscapes))
     cmd_src.reply('bot: mode: ' + plugin_fields.bot.mode.__str__() +
                   ', running: ' + plugin_fields.bot.running.__str__() +
                   ', online: ' + plugin_fields.bot.online.__str__() +
                   ', list: ' + plugin_fields.bot.occupied_players.players.__str__() +
-                  ', count: ' + plugin_fields.bot.occupied_players.size.__str__())
+                  ', count: ' + plugin_fields.bot.occupied_players.size().__str__())
     pass
 
 
