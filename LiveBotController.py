@@ -190,7 +190,8 @@ def load_landscape(server: ServerInterface):
         with open(LANDSCAPE_PATH, 'r') as file:
             plugin_fields.landscapes = []
             for line in file:
-                plugin_fields.landscapes.append(str.removesuffix(line, '\n'))
+                #plugin_fields.landscapes.append(str.removesuffix(line, '\n'))
+                plugin_fields.landscapes.append(line.replace('\n', ''))
             server.logger.info('Landscape file loaded')
     except FileNotFoundError as e:
         server.logger.warning('fail to read landscape file: %s, creating it automatically.' % e)
