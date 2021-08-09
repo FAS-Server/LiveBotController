@@ -227,7 +227,7 @@ def update_player_list(server: ServerInterface):
         for player in plugin_fields.player_list:
             if plugin_fields.player_pattern is None:
                 break
-            if re.fullmatch(plugin_fields.player_pattern, player) is not None:
+            if re.fullmatch(plugin_fields.player_pattern, player.lower()) is not None:
                 plugin_fields.server.logger.info('remove %s' % player)
                 plugin_fields.player_list.remove(player)
 
@@ -288,9 +288,9 @@ def on_load(server: ServerInterface, old_module):
     check_rcon()
     if config['excludedPrefix'] != '' or config['excludedSuffix'] != '':
         plugin_fields.player_pattern = re.compile(
-            r'(' + config['excludedPrefix'] + r')' +
+            r'(' + config['excludedPrefix'].lower() + r')' +
             r'\w+' +
-            r'(' + config['excludedSuffix'] + r')'
+            r'(' + config['excludedSuffix'].lower() + r')'
         )
     else:
         plugin_fields.player_pattern = None
