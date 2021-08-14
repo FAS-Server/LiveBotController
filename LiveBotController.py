@@ -272,6 +272,7 @@ def peek(cmd_src: CommandSource):
                   ', online: ' + plugin_fields.bot.online.__str__() +
                   ', list: ' + plugin_fields.bot.occupied_players.players.__str__() +
                   ', count: ' + plugin_fields.bot.occupied_players.size().__str__())
+    cmd_src.reply('config: ' + config.__str__())
     pass
 
 
