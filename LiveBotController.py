@@ -204,7 +204,7 @@ def build_command(server: ServerInterface):
     server.register_help_message(PREFIX, "Control the livebot")
     node = Literal(PREFIX).runs(occupy)
     server.register_command(node)
-    # server.register_command(Literal('!!test').runs(dump))
+    server.register_command(Literal('!!test').requires(lambda src: src.has_permission(3)).runs(peek))
 
 
 @new_thread('LiveBotController_checkRcon')
@@ -264,7 +264,7 @@ def cast(event: str):
     }[event]()
 
 
-def dump(cmd_src: CommandSource):
+def peek(cmd_src: CommandSource):
     cmd_src.reply('plugin_fields:' + plugin_fields.player_list.__str__() + '_%d' % len(plugin_fields.player_list))
     cmd_src.reply('landscape:' + plugin_fields.landscapes.__str__() + '_%d' % len(plugin_fields.landscapes))
     cmd_src.reply('bot: mode: ' + plugin_fields.bot.mode.__str__() +
